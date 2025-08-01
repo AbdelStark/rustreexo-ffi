@@ -195,10 +195,19 @@ jobs:
 
     - name: Test Node.js package
       run: |
-        cd rustreexo-wasm/examples
-        npm ci
+        echo "🧪 Testing Node.js package loading..."
+        
+        # Check if we have the expected structure
+        if [ -d "rustreexo-wasm/pkg-node" ]; then
+          PKG_PATH="./rustreexo-wasm/pkg-node/rustreexo_wasm.js"
+        else
+          echo "Looking for package in current directory..."
+          find . -name "rustreexo_wasm.js" | head -1
+          PKG_PATH="$(find . -name "rustreexo_wasm.js" | head -1)"
+        fi
+        
         node -e "
-          const pkg = require('../pkg-node/rustreexo_wasm.js');
+          const pkg = require('$PKG_PATH');
           console.log('✅ Package loaded successfully');
           const stump = new pkg.WasmStump();
           console.log('✅ WasmStump created successfully');
@@ -210,6 +219,9 @@ jobs:
 
     - name: Verify package contents
       run: |
+        echo "📦 Downloaded artifact contents:"
+        find . -name "*.wasm" -o -name "*.js" -o -name "package.json" | head -10
+        
         if [ "${{ matrix.target }}" = "nodejs" ]; then
           PKG_DIR="rustreexo-wasm/pkg-node"
         else  
@@ -217,7 +229,7 @@ jobs:
         fi
         
         echo "📦 Verifying ${{ matrix.target }} package contents in ${PKG_DIR}/:"
-        ls -la ${PKG_DIR}/
+        ls -la ${PKG_DIR}/ || (echo "Directory not found, listing all files:" && find . -type f | head -20)
         
         # Check required files exist
         test -f "${PKG_DIR}/rustreexo_wasm.js" || exit 1
