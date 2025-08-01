@@ -197,15 +197,10 @@ jobs:
       run: |
         echo "🧪 Testing Node.js package loading..."
         
-        # Check if we have the expected structure
-        if [ -d "rustreexo-wasm/pkg-node" ]; then
-          PKG_PATH="./rustreexo-wasm/pkg-node/rustreexo_wasm.js"
-        else
-          echo "Looking for package in current directory..."
-          find . -name "rustreexo_wasm.js" | head -1
-          PKG_PATH="$(find . -name "rustreexo_wasm.js" | head -1)"
-        fi
+        # The package should be directly in pkg-node/
+        PKG_PATH="./pkg-node/rustreexo_wasm.js"
         
+        echo "Loading package from: $PKG_PATH"
         node -e "
           const pkg = require('$PKG_PATH');
           console.log('✅ Package loaded successfully');
@@ -223,13 +218,13 @@ jobs:
         find . -name "*.wasm" -o -name "*.js" -o -name "package.json" | head -10
         
         if [ "${{ matrix.target }}" = "nodejs" ]; then
-          PKG_DIR="rustreexo-wasm/pkg-node"
+          PKG_DIR="pkg-node"
         else  
-          PKG_DIR="rustreexo-wasm/pkg-${{ matrix.target }}"
+          PKG_DIR="pkg-${{ matrix.target }}"
         fi
         
         echo "📦 Verifying ${{ matrix.target }} package contents in ${PKG_DIR}/:"
-        ls -la ${PKG_DIR}/ || (echo "Directory not found, listing all files:" && find . -type f | head -20)
+        ls -la ${PKG_DIR}/
         
         # Check required files exist
         test -f "${PKG_DIR}/rustreexo_wasm.js" || exit 1
